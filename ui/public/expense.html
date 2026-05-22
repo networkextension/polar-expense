@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>家庭账本 — Polar-</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/polaris-logo.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="lp-page">
+    <div class="lp-app">
+      <aside class="lp-sidebar lp-sidebar-wide">
+        <a class="lp-brand" href="/dashboard.html" data-site-brand>
+          <img data-site-icon alt="" />
+          <span class="lp-brand-name" data-site-name>Polar-</span>
+        </a>
+
+        <nav class="lp-nav">
+          <a class="lp-nav-item" href="/dashboard.html">
+            <span class="lp-nav-icon" data-icon="layout-dashboard">⊞</span><span>Dashboard</span>
+          </a>
+          <a class="lp-nav-item" href="/teams.html">
+            <span class="lp-nav-icon" data-icon="users-round">⌂</span><span data-i18n="nav.teams">工作区</span>
+          </a>
+          <a class="lp-nav-item" href="/posts.html">
+            <span class="lp-nav-icon" data-icon="message-square">◎</span><span>Posts</span>
+          </a>
+          <a class="lp-nav-item" href="/markdowns.html">
+            <span class="lp-nav-icon" data-icon="file-text">◈</span><span>Markdowns</span>
+          </a>
+          <a class="lp-nav-item" href="/rooms.html">
+            <span class="lp-nav-icon" data-icon="users">👥</span><span>群聊</span>
+          </a>
+          <a class="lp-nav-item" href="/chat.html">
+            <span class="lp-nav-icon" data-icon="message-circle">◉</span><span>Chat</span>
+          </a>
+          <a class="lp-nav-item" href="/creation.html">
+            <span class="lp-nav-icon" data-icon="pen-line">✍</span><span data-i18n="nav.creation">Creation</span>
+          </a>
+          <a class="lp-nav-item" href="/hosts.html">
+            <span class="lp-nav-icon" data-icon="server">▣</span><span data-i18n="nav.hosts">主机</span>
+          </a>
+          <a class="lp-nav-item" href="/editor.html">
+            <span class="lp-nav-icon" data-icon="code">✎</span><span>Editor</span>
+          </a>
+          <a class="lp-nav-item" href="/llm-billing.html">
+            <span class="lp-nav-icon" data-icon="dollar-sign">¤</span><span>LLM 计费</span>
+          </a>
+          <a class="lp-nav-item active" href="/expense.html">
+            <span class="lp-nav-icon" data-icon="receipt">💰</span><span>家庭账本</span>
+          </a>
+          <a class="lp-nav-item" href="/latch.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="settings">⚙</span><span data-i18n="nav.latch">Latch</span>
+          </a>
+          <a class="lp-nav-item" href="/bots.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="bot">◉</span><span data-i18n="nav.bots">Bot Management</span>
+          </a>
+          <a class="lp-nav-item" href="/admin-plugins.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="puzzle">🧩</span><span>Plugin 注册</span>
+          </a>
+          <a class="lp-nav-item" href="/wg-tokens.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="network">🔐</span><span>WG Mesh</span>
+          </a>
+          <a class="lp-nav-item" href="/proxy-tokens.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="key">🔑</span><span>API Tokens</span>
+          </a>
+          <a class="lp-nav-item" href="/prompts.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="sparkles">✦</span><span>Prompt 模板</span>
+          </a>
+          <a class="lp-nav-item" href="/grafana/" target="_blank" rel="noopener" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="line-chart">📊</span><span>Grafana</span>
+          </a>
+          <a class="lp-nav-item" href="/admin.html" hidden data-admin-nav>
+            <span class="lp-nav-icon" data-icon="users-cog">☍</span><span>用户管理</span>
+          </a>
+        </nav>
+
+        <div class="lp-sidebar-foot">
+          <div class="lp-foot-avatar" id="lpFootAvatar">A</div>
+          <div class="lp-foot-info">
+            <div class="lp-foot-name" id="lpFootName">—</div>
+            <div class="lp-foot-role" id="lpFootRole">—</div>
+          </div>
+          <div class="lp-sidebar-foot-actions">
+            <button class="lp-foot-icon-btn" type="button" data-open-settings-center data-settings-target="personalization" title="Settings"><span data-icon="settings"></span></button>
+            <button id="logoutBtn" class="lp-foot-icon-btn" type="button" title="Log out"><span data-icon="log-out"></span></button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="lp-main">
+        <div class="lp-topbar">
+          <span class="lp-topbar-title">家庭账本 · 老婆大人专用</span>
+          <div class="lp-topbar-end" style="display:flex; gap:6px;">
+            <button class="lp-tab lp-tab-active" data-tab="expenses" id="tabExpenses">📒 流水</button>
+            <button class="lp-tab" data-tab="drafts" id="tabDrafts">📷 待确认<span id="draftBadge" class="lp-mode-badge" hidden style="margin-left:6px; background:#fbbf24; color:#fff;">0</span></button>
+            <button class="lp-tab" data-tab="categories" id="tabCategories">🏷 分类</button>
+          </div>
+        </div>
+
+        <div class="lp-content" style="padding: 12px; overflow-y:auto;">
+
+          <!-- 流水 -->
+          <section id="paneExpenses" class="lp-pane">
+            <div class="lp-preview-main">
+              <div class="lp-preview-head" style="align-items:center;">
+                <span class="badge">流水</span>
+                <span id="expenseCount" class="lp-mode-badge">—</span>
+                <span id="expenseTotal" class="meta-subtitle" style="margin-left:8px;">—</span>
+                <span style="flex:1;"></span>
+                <label class="meta-subtitle" style="font-size:12px;">范围
+                  <select id="filterPeriod" class="input" style="width:auto; max-width:140px; margin-left:4px;">
+                    <option value="all" selected>全部</option>
+                    <option value="month">本月</option>
+                    <option value="last_month">上月</option>
+                    <option value="30d">最近 30 天</option>
+                  </select>
+                </label>
+                <label class="meta-subtitle" style="font-size:12px;">分类
+                  <select id="filterCategory" class="input" style="width:auto; max-width:140px; margin-left:4px;">
+                    <option value="">全部</option>
+                  </select>
+                </label>
+                <button id="expenseRefreshBtn" class="btn-inline btn-secondary" type="button" title="刷新">⟲</button>
+                <button id="uploadReceiptBtn" class="btn-inline btn-secondary" type="button" title="上传账单截图自动抽取">📷 上传截图</button>
+                <input id="uploadReceiptInput" type="file" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" hidden />
+                <button id="newExpenseBtn" class="btn-inline btn-primary" type="button">+ 手工记账</button>
+              </div>
+              <div class="lp-preview-body">
+                <p class="meta-subtitle" style="margin: 0 0 12px 0;">
+                  L1 手工录入；OCR 截图自动抽取下一阶段（L2）上线。删除分类不会丢流水（该流水的分类会变成「未分类」）。
+                </p>
+                <table id="expenseTable" class="lp-table" hidden>
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>商户</th>
+                      <th>分类</th>
+                      <th style="text-align:right;">金额</th>
+                      <th>地区</th>
+                      <th>备注</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="expenseTbody"></tbody>
+                </table>
+                <div id="expenseEmpty" class="meta-subtitle" hidden>暂无流水。点右上「+ 手工记账」开始。</div>
+                <div id="expenseLoading" class="meta-subtitle">加载中...</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 待确认草稿 (status=0) -->
+          <section id="paneDrafts" class="lp-pane" hidden>
+            <div class="lp-preview-main">
+              <div class="lp-preview-head" style="align-items:center;">
+                <span class="badge">待确认</span>
+                <span id="draftCount" class="lp-mode-badge">—</span>
+                <span style="flex:1;"></span>
+                <button id="draftRefreshBtn" class="btn-inline btn-secondary" type="button" title="刷新">⟲</button>
+              </div>
+              <div class="lp-preview-body">
+                <p class="meta-subtitle" style="margin: 0 0 12px 0;">
+                  上传截图自动 OCR + AI 抽取出来的草稿。点「✓ 确认」入正式账，「✎」改字段，「🗑」放弃。
+                  抽取失败的草稿会带红色错误提示，金额留空，需手填后确认。
+                </p>
+                <table id="draftTable" class="lp-table" hidden>
+                  <thead>
+                    <tr>
+                      <th style="width:60px;">图片</th>
+                      <th>时间</th>
+                      <th>商户</th>
+                      <th>分类</th>
+                      <th style="text-align:right;">金额</th>
+                      <th>置信度</th>
+                      <th>备注 / 错误</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="draftTbody"></tbody>
+                </table>
+                <div id="draftEmpty" class="meta-subtitle" hidden>没有待确认草稿。点流水标签的「📷 上传截图」抽取一张。</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 分类 -->
+          <section id="paneCategories" class="lp-pane" hidden>
+            <div class="lp-preview-main">
+              <div class="lp-preview-head" style="align-items:center;">
+                <span class="badge">分类</span>
+                <span id="categoryCount" class="lp-mode-badge">—</span>
+                <span style="flex:1;"></span>
+                <button id="categoryRefreshBtn" class="btn-inline btn-secondary" type="button" title="刷新">⟲</button>
+                <button id="newCategoryBtn" class="btn-inline btn-primary" type="button">+ 新建分类</button>
+              </div>
+              <div class="lp-preview-body">
+                <p class="meta-subtitle" style="margin: 0 0 12px 0;">
+                  首次访问会自动落库 7 个预设（生活/教育/医疗/交通/娱乐/大件/其他）。隐藏 ≠ 删除，隐藏后流水中仍可显示但新建表单里不出现。
+                </p>
+                <table id="categoryTable" class="lp-table" hidden>
+                  <thead>
+                    <tr>
+                      <th style="width:60px;">图标</th>
+                      <th>名称</th>
+                      <th style="width:80px;">颜色</th>
+                      <th style="width:80px;">排序</th>
+                      <th style="width:80px;">隐藏</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="categoryTbody"></tbody>
+                </table>
+                <div id="categoryEmpty" class="meta-subtitle" hidden>暂无分类。</div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Expense create/edit modal -->
+    <div id="expenseModal" class="lp-modal" hidden>
+      <div class="lp-modal-card" style="max-width: 520px;">
+        <div class="lp-modal-head">
+          <span class="lp-modal-title" id="expenseModalTitle">手工记账</span>
+          <button id="expenseModalCloseBtn" type="button" class="lp-modal-close">✕</button>
+        </div>
+        <div class="lp-modal-body">
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="expenseAmount">金额 *</label>
+            <input id="expenseAmount" class="input" type="number" min="0.01" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="expenseMerchant">商户</label>
+            <input id="expenseMerchant" class="input" type="text" placeholder="e.g. 山姆会员店" />
+          </div>
+
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="expenseCategory">分类</label>
+            <select id="expenseCategory" class="input">
+              <option value="">未分类</option>
+            </select>
+          </div>
+
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="expenseConsumeTime">消费时间 *</label>
+            <input id="expenseConsumeTime" class="input" type="datetime-local" />
+            <div class="meta-subtitle" style="margin-top:4px;">
+              <label style="font-size:12px;">
+                <input id="expenseDateOnly" type="checkbox" /> 只精确到日期
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="expenseRegion">地区</label>
+            <input id="expenseRegion" class="input" type="text" placeholder="e.g. 北京 / 东京新宿" />
+          </div>
+
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="expenseRemark">备注</label>
+            <textarea id="expenseRemark" class="input textarea" rows="2"></textarea>
+          </div>
+
+          <div id="expenseFormError" class="status-text" style="color: var(--danger, #c00);"></div>
+        </div>
+        <div class="lp-modal-foot">
+          <button id="expenseModalCancelBtn" type="button" class="btn-inline btn-secondary">取消</button>
+          <button id="expenseModalSubmitBtn" type="button" class="btn-inline btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category create/edit modal -->
+    <div id="categoryModal" class="lp-modal" hidden>
+      <div class="lp-modal-card" style="max-width: 420px;">
+        <div class="lp-modal-head">
+          <span class="lp-modal-title" id="categoryModalTitle">新建分类</span>
+          <button id="categoryModalCloseBtn" type="button" class="lp-modal-close">✕</button>
+        </div>
+        <div class="lp-modal-body">
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="categoryName">名称 *</label>
+            <input id="categoryName" class="input" type="text" />
+          </div>
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="categoryIcon">图标 (emoji)</label>
+            <input id="categoryIcon" class="input" type="text" placeholder="🛒" maxlength="4" />
+          </div>
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="categoryColor">颜色</label>
+            <input id="categoryColor" class="input" type="color" value="#888888" style="width:80px; height:36px;" />
+          </div>
+          <div class="settings-section-card" style="margin-bottom: 12px;">
+            <label class="settings-section-title" for="categorySortOrder">排序值（小的在前）</label>
+            <input id="categorySortOrder" class="input" type="number" value="100" />
+          </div>
+          <div id="categoryFormError" class="status-text" style="color: var(--danger, #c00);"></div>
+        </div>
+        <div class="lp-modal-foot">
+          <button id="categoryModalCancelBtn" type="button" class="btn-inline btn-secondary">取消</button>
+          <button id="categoryModalSubmitBtn" type="button" class="btn-inline btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/scripts/expense.js"></script>
+  </body>
+</html>
