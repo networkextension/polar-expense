@@ -20,10 +20,10 @@ import {
   type ExpenseCategory,
   type ExpenseListFilter,
 } from "./api/expense.js";
-import { logout } from "./api/session.js";
-import { byId } from "./lib/dom.js";
-import { hydrateSidebarFoot, hydrateSiteBrand } from "./lib/site.js";
-import { bindThemeSync, initStoredTheme } from "./lib/theme.js";
+import { logout } from "@networkextension/polar-ui-common/api/session";
+import { byId } from "@networkextension/polar-ui-common/lib/dom";
+import { hydrateSidebarFoot, hydrateSiteBrand } from "@networkextension/polar-ui-common/lib/site";
+import { bindThemeSync, initStoredTheme } from "@networkextension/polar-ui-common/lib/theme";
 
 initStoredTheme();
 bindThemeSync();

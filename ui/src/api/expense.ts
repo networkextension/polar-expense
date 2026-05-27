@@ -1,6 +1,6 @@
 // Typed wrappers for /api/expenses + /api/expense-categories.
 
-import { request, requestJson } from "./http.js";
+import { request, requestJson } from "@networkextension/polar-ui-common/api/http";
 
 export interface ExpenseCategory {
   id: number;
