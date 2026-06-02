@@ -23,6 +23,7 @@ import {
 import { logout } from "@networkextension/polar-ui-common/api/session";
 import { byId } from "@networkextension/polar-ui-common/lib/dom";
 import { hydrateSidebarFoot, hydrateSiteBrand } from "@networkextension/polar-ui-common/lib/site";
+import { mountPlatformNav } from "@networkextension/polar-ui-common/lib/sidebar";
 import { bindThemeSync, initStoredTheme } from "@networkextension/polar-ui-common/lib/theme";
 
 initStoredTheme();
@@ -669,6 +670,7 @@ logoutBtn?.addEventListener("click", () => {
 
 async function bootstrap(): Promise<void> {
   hydrateSiteBrand();
+  void mountPlatformNav();
   hydrateSidebarFoot();
   await loadCategories(); // also bootstraps backend presets if empty
   await Promise.all([loadExpenses(), refreshDraftBadge()]);
