@@ -337,14 +337,16 @@ func (p *Plugin) handleExpenseFromImage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "文件保存失败"})
 		return
 	}
-	relPath, sha, err := p.saveExpenseImage(stage, file.Filename)
-	if err != nil {
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if _, ok := allowedExpenseImageExts[ext]; !ok {
 		_ = os.Remove(stage)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "不支持的图片格式（仅 jpg/png/heic/webp）"})
 		return
 	}
-	log.Printf("expense from-image: workspace=%s user=%s file=%s sha=%s rel=%s",
-		workspaceID, userID, file.Filename, sha[:12], relPath)
+	// Single-write: the asset platform owns the bytes; the staged file is
+	// transient (OCR reads it, then it's uploaded to assets + removed).
+	defer os.Remove(stage)
+	log.Printf("expense from-image: workspace=%s user=%s file=%s", workspaceID, userID, file.Filename)
 
 	// Extract. Pipeline branch:
 	//   EXPENSE_EXTRACT_MULTIMODAL_LLM_CONFIG_ID set
@@ -354,22 +356,28 @@ func (p *Plugin) handleExpenseFromImage(c *gin.Context) {
 	//        text receipts)
 	// Both produce ExpenseExtractDraft. Failures still create a status=0
 	// draft (image is preserved, user can manually fill).
-	abs := filepath.Join(p.BlobDir, relPath)
 	var draft *ExpenseExtractDraft
 	var extErr error
 	if expenseMultimodalLLMConfigID() > 0 {
-		draft, extErr = p.extractExpenseFromImageMultimodal(c.Request.Context(), workspaceID, abs)
+		draft, extErr = p.extractExpenseFromImageMultimodal(c.Request.Context(), workspaceID, stage)
 		if extErr != nil {
 			log.Printf("expense from-image: multimodal failed, falling back to OCR: %v", extErr)
-			draft, extErr = p.extractExpenseFromImage(c.Request.Context(), workspaceID, abs)
+			draft, extErr = p.extractExpenseFromImage(c.Request.Context(), workspaceID, stage)
 		}
 	} else {
-		draft, extErr = p.extractExpenseFromImage(c.Request.Context(), workspaceID, abs)
+		draft, extErr = p.extractExpenseFromImage(c.Request.Context(), workspaceID, stage)
+	}
+	// Single-write the receipt to the tenant's assets catalog; the marker
+	// goes into raw_image_id. Hard-fail (assets owns the bytes).
+	marker, upErr := p.uploadExpenseImageAsset(workspaceID, stage)
+	if upErr != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "图片上传失败：" + upErr.Error()})
+		return
 	}
 	e := &Expense{
 		WorkspaceID:     workspaceID,
 		CreatedByUserID: userID,
-		RawImageID:      &relPath,
+		RawImageID:      &marker,
 		Status:          ExpenseStatusDraft,
 		Currency:        "CNY",
 		Confidence:      0,
@@ -434,6 +442,11 @@ func (p *Plugin) handleExpenseImageDownload(c *gin.Context) {
 	}
 	if e == nil || e.RawImageID == nil || *e.RawImageID == "" {
 		c.JSON(http.StatusNotFound, gin.H{"error": "没有原始图片"})
+		return
+	}
+	// Dual-read: serve from the assets catalog if migrated, else the
+	// legacy local file.
+	if p.streamExpenseImageFromAssets(c, *e.RawImageID) {
 		return
 	}
 	abs := p.resolveExpenseImagePath(*e.RawImageID)

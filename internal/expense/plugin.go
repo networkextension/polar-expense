@@ -179,6 +179,7 @@ func (p *Plugin) RegisterRoutes(r gin.IRouter) {
 
 func (p *Plugin) Start(ctx context.Context) {
 	go p.heartbeatLoop(ctx)
+	go p.backfillExpenseImagesOnce() // self-migrate any local-only receipts to assets
 }
 
 func (p *Plugin) Close() error {
