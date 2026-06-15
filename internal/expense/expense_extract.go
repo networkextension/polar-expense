@@ -41,7 +41,7 @@ type ExpenseExtractDraft struct {
 
 // extractExpenseFromImage runs the full OCR → LLM pipeline. workspaceID
 // gates which LLM gets used + which categories the LLM sees. imagePath
-// is the absolute on-disk path we wrote in saveExpenseImage.
+// is the absolute path of the staged temp file (os.TempDir).
 func (p *Plugin) extractExpenseFromImage(ctx context.Context, workspaceID, imagePath string) (*ExpenseExtractDraft, error) {
 	if strings.TrimSpace(imagePath) == "" {
 		return nil, errEmptyExpenseImage
