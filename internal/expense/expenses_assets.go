@@ -1,17 +1,14 @@
 package expense
 
-// Assets migration (doc/arch/blob-storage-to-assets-migration.md in
-// polar-dock): receipt images move from expense-svc-local disk to the
-// central polar-assets catalog (single-write, tenant-owned). We reuse the
-// existing `expenses.raw_image_id` column as the per-row blob reference:
-// new rows store "asset://<id>"; legacy rows keep the
-// "expense-images/<sha>.<ext>" relative path and read from local disk
-// until the boot backfill migrates them.
+// Assets glue (doc/arch/blob-storage-to-assets-migration.md in
+// polar-dock): receipt images live exclusively in the central polar-assets
+// catalog (single-write, tenant-owned). The existing `expenses.raw_image_id`
+// column holds the per-row blob reference as an "asset://<id>" marker (the
+// transitional local-path fallback + backfill were removed at cutover).
 
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -69,9 +66,9 @@ func (p *Plugin) uploadExpenseImageAsset(ws, localPath string) (string, error) {
 	return "asset://" + strconv.FormatInt(meta.ID, 10), nil
 }
 
-// streamExpenseImageFromAssets serves a receipt from assets when
-// raw_image_id is an "asset://" marker. Returns false (caller falls back
-// to the local file) for legacy rows or on fetch failure.
+// streamExpenseImageFromAssets serves a receipt from assets (raw_image_id
+// is an "asset://" marker). Returns false (no body written) when the marker
+// is unparseable or the fetch fails, so the caller can emit an error.
 func (p *Plugin) streamExpenseImageFromAssets(c *gin.Context, rawImageID string) bool {
 	id, ok := expenseImageAssetID(rawImageID)
 	if !ok {
@@ -91,52 +88,4 @@ func (p *Plugin) streamExpenseImageFromAssets(c *gin.Context, rawImageID string)
 	}
 	c.DataFromReader(http.StatusOK, resp.ContentLength, ct, resp.Body, nil)
 	return true
-}
-
-// backfillExpenseImagesOnce migrates any local-file receipts into the
-// assets catalog on startup, rewriting raw_image_id to "asset://<id>".
-// Idempotent goroutine from Start().
-func (p *Plugin) backfillExpenseImagesOnce() {
-	rows, err := p.DB.Query(`SELECT id, workspace_id, raw_image_id FROM expenses
-		WHERE raw_image_id IS NOT NULL AND raw_image_id <> '' AND raw_image_id NOT LIKE 'asset://%'`)
-	if err != nil {
-		log.Printf("expense: image backfill: query: %v", err)
-		return
-	}
-	type row struct {
-		id  int64
-		ws  string
-		rel string
-	}
-	var pending []row
-	for rows.Next() {
-		var r row
-		if err := rows.Scan(&r.id, &r.ws, &r.rel); err != nil {
-			continue
-		}
-		pending = append(pending, r)
-	}
-	rows.Close()
-
-	migrated := 0
-	for _, r := range pending {
-		abs := p.resolveExpenseImagePath(r.rel)
-		if abs == "" {
-			log.Printf("expense: image backfill: expense %d: local file missing (skip)", r.id)
-			continue
-		}
-		marker, err := p.uploadExpenseImageAsset(r.ws, abs)
-		if err != nil {
-			log.Printf("expense: image backfill: expense %d: upload: %v", r.id, err)
-			continue
-		}
-		if _, err := p.DB.Exec(`UPDATE expenses SET raw_image_id = $2 WHERE id = $1`, r.id, marker); err != nil {
-			log.Printf("expense: image backfill: expense %d: update: %v", r.id, err)
-			continue
-		}
-		migrated++
-	}
-	if migrated > 0 {
-		log.Printf("expense: image backfill: migrated %d receipt(s) to assets", migrated)
-	}
 }

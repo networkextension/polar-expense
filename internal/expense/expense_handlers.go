@@ -325,14 +325,14 @@ func (p *Plugin) handleExpenseFromImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "文件为空"})
 		return
 	}
-
-	// Stage then content-address — same shape as attachments_handlers
-	// but stored in expense-images/<sha>.<ext>.
-	stage := filepath.Join(p.BlobDir, "expense-staging-"+generateResourceID()+filepath.Ext(file.Filename))
-	if err := os.MkdirAll(filepath.Dir(stage), 0o755); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "服务器错误"})
+	if file.Size > expenseImageMaxBytes {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "图片超过 25 MiB 上限"})
 		return
 	}
+
+	// Stage to an ephemeral temp file: OCR/extract reads it, then it's
+	// single-written to assets + removed. No expense-svc-local blob storage.
+	stage := filepath.Join(os.TempDir(), "expense-staging-"+generateResourceID()+filepath.Ext(file.Filename))
 	if err := c.SaveUploadedFile(file, stage); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "文件保存失败"})
 		return
@@ -444,15 +444,8 @@ func (p *Plugin) handleExpenseImageDownload(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "没有原始图片"})
 		return
 	}
-	// Dual-read: serve from the assets catalog if migrated, else the
-	// legacy local file.
-	if p.streamExpenseImageFromAssets(c, *e.RawImageID) {
-		return
+	// Assets-only: receipt bytes live in the tenant's central catalog.
+	if !p.streamExpenseImageFromAssets(c, *e.RawImageID) {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "图片暂时不可用"})
 	}
-	abs := p.resolveExpenseImagePath(*e.RawImageID)
-	if abs == "" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "图片文件已不存在"})
-		return
-	}
-	c.File(abs)
 }

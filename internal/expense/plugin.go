@@ -3,10 +3,10 @@
 // Vision) + LLM extraction + an optional multimodal vision-LLM path
 // when EXPENSE_EXTRACT_MULTIMODAL_LLM_CONFIG_ID is set.
 //
-// The plugin owns its own DB (polar_expense) + on-disk blob store
-// (BlobDir/expense-images/<sha[0:2]>/<sha><ext>). All cross-domain
-// resolves (workspace, system user id, llm config + api key, agent
-// cost ledger) go through polar-sdk → dock /internal/v1/*.
+// The plugin owns its own DB (polar_expense); receipt image bytes live in
+// the central polar-assets catalog (raw_image_id = "asset://<id>"). All
+// cross-domain resolves (workspace, system user id, llm config + api key,
+// agent cost ledger) go through polar-sdk → dock /internal/v1/*.
 package expense
 
 import (
@@ -34,7 +34,6 @@ type Plugin struct {
 	Name       string
 	Listen     string
 	Ver        string
-	BlobDir    string // $POLAR_EXPENSE_BLOB_DIR — expense-images/ subdir
 	MetricsTok string
 
 	// SystemWorkspaceID is dock's "system" user's personal team. Most
@@ -61,7 +60,6 @@ type Config struct {
 	PluginToken  string
 	Listen       string
 	BuildVersion string
-	BlobDir      string
 	MetricsToken string
 }
 
@@ -78,9 +76,6 @@ func New(ctx context.Context, cfg Config) (*Plugin, error) {
 	}
 	if strings.TrimSpace(cfg.PluginToken) == "" {
 		return nil, errors.New("expense.New: PluginToken required")
-	}
-	if strings.TrimSpace(cfg.BlobDir) == "" {
-		return nil, errors.New("expense.New: BlobDir required")
 	}
 
 	db, err := sql.Open("postgres", cfg.DBDSN)
@@ -133,7 +128,6 @@ func New(ctx context.Context, cfg Config) (*Plugin, error) {
 		Name:              cfg.PluginName,
 		Listen:            cfg.Listen,
 		Ver:               cfg.BuildVersion,
-		BlobDir:           cfg.BlobDir,
 		MetricsTok:        cfg.MetricsToken,
 		SystemWorkspaceID: systemWorkspaceID,
 		metrics:           newExpenseMetrics(),
@@ -179,7 +173,6 @@ func (p *Plugin) RegisterRoutes(r gin.IRouter) {
 
 func (p *Plugin) Start(ctx context.Context) {
 	go p.heartbeatLoop(ctx)
-	go p.backfillExpenseImagesOnce() // self-migrate any local-only receipts to assets
 }
 
 func (p *Plugin) Close() error {
@@ -203,7 +196,6 @@ func (p *Plugin) handleHealthz(c *gin.Context) {
 		"version":        p.Ver,
 		"uptime_seconds": int64(time.Since(p.startedAt).Seconds()),
 		"db_ok":          dbOK,
-		"blob_dir":       p.BlobDir,
 		"go":             runtime.Version(),
 	})
 }

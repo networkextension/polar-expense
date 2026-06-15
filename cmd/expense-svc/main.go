@@ -8,7 +8,6 @@
 //	POLAR_PLUGIN_TOKEN         polar_plugin_…   (plaintext from /admin-plugins.html)
 //	POLAR_EXPENSE_LISTEN       127.0.0.1:8097
 //	POLAR_EXPENSE_VERSION      git-sha or "0.0.1"
-//	POLAR_EXPENSE_BLOB_DIR     /Users/local/expense-svc-data   (holds expense-images/)
 //	POLAR_EXPENSE_METRICS_TOKEN  bearer for /metrics; unset = 404
 //
 // OCR + LLM env (consumed inside the plugin, not Config-bound):
@@ -42,7 +41,6 @@ func main() {
 		PluginToken:  os.Getenv("POLAR_PLUGIN_TOKEN"),
 		Listen:       envOrDefault("POLAR_EXPENSE_LISTEN", "127.0.0.1:8097"),
 		BuildVersion: envOrDefault("POLAR_EXPENSE_VERSION", "0.0.1"),
-		BlobDir:      envOrDefault("POLAR_EXPENSE_BLOB_DIR", "/Users/local/expense-svc-data"),
 		MetricsToken: os.Getenv("POLAR_EXPENSE_METRICS_TOKEN"),
 	}
 	if strings.TrimSpace(cfg.PluginToken) == "" {
@@ -66,8 +64,8 @@ func main() {
 
 	srv := &http.Server{Addr: cfg.Listen, Handler: r, ReadHeaderTimeout: 10 * time.Second}
 	go func() {
-		log.Printf("expense-svc listening on %s (dock=%s, name=%s, ver=%s, blob=%s)",
-			cfg.Listen, cfg.DockBase, cfg.PluginName, cfg.BuildVersion, cfg.BlobDir)
+		log.Printf("expense-svc listening on %s (dock=%s, name=%s, ver=%s)",
+			cfg.Listen, cfg.DockBase, cfg.PluginName, cfg.BuildVersion)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("ListenAndServe: %v", err)
 		}
